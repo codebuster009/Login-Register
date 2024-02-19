@@ -1,47 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect } from 'react';
+import { useDispatch , useSelector} from 'react-redux';
+import { setEmail, setPassword, setFullName, loginUser, registerUser, logoutUser, setIsRegistering } from './loginSlice';
 import "./Login.css"
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [fullName, setFullName] = useState('');
-    const [loggedIn, setLoggedIn] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [userName, setUserName] = useState('');
-
+    const dispatch = useDispatch();
+    const { email, password, fullName, loggedIn, isRegistering, userName } = useSelector(state => state.login);
     useEffect(() => {
         // Check if user is logged in
         const isLoggedIn = localStorage.getItem('loggedIn') === 'true';
-        setLoggedIn(isLoggedIn);
-    }, []);
+        if (isLoggedIn) {
+            const userDetails = JSON.parse(atob(document.cookie.split('=')[1]));
+            dispatch(setFullName(userDetails.name));
+            dispatch(setIsRegistering(false));
+        }
+    }, [dispatch]);
 
     const handleEmailChange = (event) => {
-        setEmail(event.target.value);
+        dispatch(setEmail(event.target.value));
     };
 
     const handlePasswordChange = (event) => {
-        setPassword(event.target.value);
+        dispatch(setPassword(event.target.value));
     }; 
 
     const handleFullNameChange = (event) => {
-        setFullName(event.target.value);
+        dispatch(setFullName(event.target.value));
     };
 
     const handleRegisterSubmit = (event) => {
-        event.preventDefault();
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
-        // Check if the current user already exists
-        const existingUser = users.find(user => user.email === email);
-    
-        if (existingUser) {
-            alert("Email already exists!");
-            return;
-        }
-        const encryptedPassword = btoa(password);
-        users.push({ email, password: encryptedPassword, fullName });
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.setItem('loggedIn', 'true');
-        alert("User account created successfully!");
+        event.preventDefault()
+        dispatch(registerUser({email , password , fullName}))
     };
 
     const handleLoginSubmit = (event) => {
@@ -56,10 +45,10 @@ const Login = () => {
                 setLoggedIn(true);
                 // Set loggedIn status in local storage
                 localStorage.setItem('loggedIn', 'true');
-    
+                const randomId = Math.random().toString(36).substr(2, 9)
                 // Save all user details as a JSON object in a cookie
                 const userDetails = {
-                    id: user.id,
+                    id: randomId,
                     name: user.fullName,
                     email: user.email
                     // Add more details as needed
