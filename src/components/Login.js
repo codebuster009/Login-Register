@@ -7,6 +7,7 @@ const Login = () => {
     const [fullName, setFullName] = useState('');
     const [loggedIn, setLoggedIn] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
+    const [userName, setUserName] = useState('');
 
     useEffect(() => {
         // Check if user is logged in
@@ -20,7 +21,7 @@ const Login = () => {
 
     const handlePasswordChange = (event) => {
         setPassword(event.target.value);
-    };
+    }; 
 
     const handleFullNameChange = (event) => {
         setFullName(event.target.value);
@@ -29,7 +30,6 @@ const Login = () => {
     const handleRegisterSubmit = (event) => {
         event.preventDefault();
         const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
         // Check if the current user already exists
         const existingUser = users.find(user => user.email === email);
     
@@ -37,34 +37,42 @@ const Login = () => {
             alert("Email already exists!");
             return;
         }
-    
         const encryptedPassword = btoa(password);
-    
         users.push({ email, password: encryptedPassword, fullName });
-
         localStorage.setItem('users', JSON.stringify(users));
-
-        setLoggedIn(true);
         localStorage.setItem('loggedIn', 'true');
         alert("User account created successfully!");
     };
-    
+
     const handleLoginSubmit = (event) => {
-    event.preventDefault();
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
-    const user = storedUsers.find(user => user.email === email);
-    if (user) {
-        const decodedPassword = atob(user.password);
-        if (decodedPassword === password) {
-            // Set loggedIn state to true
-            setLoggedIn(true);
-            // Set loggedIn status in local storage
-            localStorage.setItem('loggedIn', 'true');
-            return;
+        event.preventDefault();
+        const storedUsers = JSON.parse(localStorage.getItem('users')) || [];
+        const user = storedUsers.find(user => user.email === email);
+        console.log(user , "user")
+        if (user) {
+            const decodedPassword = atob(user.password);
+            if (decodedPassword === password) {
+                // Set loggedIn state to true
+                setLoggedIn(true);
+                // Set loggedIn status in local storage
+                localStorage.setItem('loggedIn', 'true');
+    
+                // Save all user details as a JSON object in a cookie
+                const userDetails = {
+                    id: user.id,
+                    name: user.fullName,
+                    email: user.email
+                    // Add more details as needed
+                };
+                const encodedUserDetails = btoa(JSON.stringify(userDetails));
+                document.cookie = `userData=${JSON.stringify(encodedUserDetails)}; expires=Thu, 01 Jan 2026 00:00:00 UTC; path=/`;
+                setUserName(user.fullName)
+                return;
+            }
         }
-    }
-    alert('Invalid email or password');
-};
+        alert('Invalid email or password');
+    };
+    
 
 
     const handleLogout = () => {
@@ -80,7 +88,7 @@ const Login = () => {
         <div className="container">
             {loggedIn ? (
                 <div>
-                    <p>Login successful!</p>
+                    <p>Welcome {userName}!</p>
                     <button onClick={handleLogout}>Logout</button>
                 </div>
             ) : (
